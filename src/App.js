@@ -1,40 +1,51 @@
 import './App.css';
-import {useState, useEffect} from 'react'
-import {fetchCSV} from "./utils/helper";
+import { useState, useEffect } from 'react';
+import { fetchCSV } from "./utils/helper";
 import ScatterplotContainer from "./components/scatterplot/ScatterplotContainer";
+import ParallelCoordsContainer from "./components/parallelcoords/ParallelCoordsContainer";
 
 function App() {
-    console.log("App component function call...")
-    const [data,setData] = useState([])
-    // every time the component re-render
-    useEffect(()=>{
-        console.log("App useEffect (called each time App re-renders)");
-    }); // if no dependencies, useEffect is called at each re-render
+    const [data, setData] = useState([]);
+    const [selectedItems, setSelectedItems] = useState([]);
 
-    useEffect(()=>{
-        console.log("App did mount");
-        fetchCSV("data/Housing.csv",(response)=>{
-            console.log("initial setData() ...")
-            setData(response.data);
-        })
-        return ()=>{
-            console.log("App did unmount");
-        }
-    },[])
+    useEffect(() => {
+        fetchCSV("data/Housing.csv", (response) => {
+            const cleaned = response.data.map((d, i) => ({
+                ...d,
+                area: +d.area,
+                price: +d.price,
+                rooms: +d.bedrooms,
+                stories: +d.stories,
+                index: i
+            }));
+            setData(cleaned);
+        });
+    }, []);
 
-    const [selectedItems, setSelectedItems] = useState([])
-
-    const scatterplotControllerMethods= {
-        updateSelectedItems: (items) =>{
-            setSelectedItems(items.map((item) => {return {...item,selected:true}} ));
-        }
+    // shared selection logic
+    const updateSelectedItems = (items) => {
+        setSelectedItems(items); // just store original objects
     };
+
+    const scatterplotControllerMethods = { updateSelectedItems, selectedItems };
+    const parallelControllerMethods = { updateSelectedItems, selectedItems };
 
     return (
         <div className="App">
-            <div id={"MultiviewContainer"} className={"row"}>
-                <ScatterplotContainer scatterplotData={data} xAttribute={"area"} yAttribute={"price"} selectedItems={selectedItems} scatterplotControllerMethods={scatterplotControllerMethods}/>
-                
+            <div id="MultiviewContainer" className="row">
+                <ScatterplotContainer
+                    scatterplotData={data}
+                    xAttribute="area"
+                    yAttribute="price"
+                    selectedItems={selectedItems}
+                    scatterplotControllerMethods={scatterplotControllerMethods}
+                />
+                <ParallelCoordsContainer
+                    data={data}
+                    dimensions={["price", "area", "rooms", "stories"]}
+                    selectedItems={selectedItems}
+                    parallelControllerMethods={parallelControllerMethods}
+                />
             </div>
         </div>
     );

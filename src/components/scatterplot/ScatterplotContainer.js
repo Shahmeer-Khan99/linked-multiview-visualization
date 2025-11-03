@@ -58,7 +58,8 @@ function ScatterplotContainer({scatterplotData, xAttribute, yAttribute, selected
         const controllerMethods={
             handleOnClick,
             handleOnMouseEnter,
-            handleOnMouseLeave
+            handleOnMouseLeave,
+            updateSelectedItems: scatterplotControllerMethods.updateSelectedItems
         }
 
         if(scatterplotDataRef.current !== scatterplotData) {
